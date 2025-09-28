@@ -339,15 +339,7 @@ func (c *SipClient) executeCommand(cmd *pb.ServerCommand) *CommandResult {
 			if count >= 15 {
 				break
 			}
-			if !strings.HasPrefix(d.ChannelID, "IPC") && stream_arr[1] == "1" {
-				// 发送信令指令给摄像头，推高清流到远程zlm，现在查询远程zlm是否存在高清流
-				resp3 := zlm_api.ZlmGetMediaList(d.ZlmDomain, d.ZlmSecret, zlmGetMediaListReq)
-				if resp3.Code == 0 && len(resp3.Data) > 0 {
-					rsp.Success = true
-					rsp.Msg = []byte("远程zlm流已存在高清流")
-					return rsp
-				}
-			} else {
+			if stream_arr[1] == "0" && !strings.HasPrefix(d.ChannelID, "IPC") {
 				// 如果是国标标清流或非国标流，则先查询本地zlm是否存在该流，不存在则直接break
 				resp2 := zlm_api.ZlmGetMediaList(sipapi.Local_ZLM_Host, m.CMConfig.ZlmSecret, zlmGetMediaListReq)
 				if resp2.Code != 0 || len(resp2.Data) == 0 {
@@ -384,6 +376,14 @@ func (c *SipClient) executeCommand(cmd *pb.ServerCommand) *CommandResult {
 					Logger.Info("实时流点播发送RTP成功", zap.Any("stream id", d.ChannelID), zap.Any("local_port", _resp.LocalPort))
 					rsp.Success = true
 					rsp.Msg = []byte("实时流点播发送RTP成功")
+					return rsp
+				}
+			} else {
+				// 发送信令指令给摄像头，推高清流到远程zlm，现在查询远程zlm是否存在高清流
+				resp3 := zlm_api.ZlmGetMediaList(d.ZlmDomain, d.ZlmSecret, zlmGetMediaListReq)
+				if resp3.Code == 0 && len(resp3.Data) > 0 {
+					rsp.Success = true
+					rsp.Msg = []byte("远程zlm流已存在高清流")
 					return rsp
 				}
 			}
