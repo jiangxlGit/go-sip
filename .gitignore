@@ -1,0 +1,12 @@
+.vscode/*
+srv
+.idea
+gosip
+vendor/*
+*.log
+ipc.db
+__debug_bin*
+*.db
+*.mod
+*.sum
+.DS_Store

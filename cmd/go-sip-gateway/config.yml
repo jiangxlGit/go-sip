@@ -1,0 +1,18 @@
+gateway_api: 0.0.0.0:8999 # 网关服务 restfulapi 端口
+sign: 9b41bf668d758b6ecfad4e33d1ed04e5 # Hty@2025的md5加密
+logLevel: info
+database:
+  redis:
+    host: 125.71.97.132:6379
+    password: UJk7*mKE%wNM
+  mysql:
+    host: 125.71.97.132:3306
+    user: iot
+    password: h3!WF3ZxAY6Y
+    dbname: htyiot
+    max_open_conns: 50
+    max_idle_conns: 10
+    conn_max_lifetime: 300
+
+
+

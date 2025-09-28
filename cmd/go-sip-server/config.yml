@@ -1,0 +1,35 @@
+sip_id: sip888 # sip服务id
+sip_inner_ip: 127.0.0.1 # sip服务内网ip
+sip_out_ip: 127.0.0.1 # sip服务外网ip
+api: 0.0.0.0 # sip服务暴露ip,0.0.0.0表示暴露给所有ip
+sip_port: 8090 # sip服务端口
+tcp_ip: 0.0.0.0 # tcp暴露ip
+tcp_port: 12345 # tcp暴露端口
+secret: z9hG4bK1233983766 # restful接口验证key 验证请求使用
+sign: 3e80d1762a324d5b0ff636e0bd16f1e4
+logLevel: info
+database:
+  dialect: redis
+  host: 125.71.97.132:6379
+  password: UJk7*mKE%wNM
+kafka:
+  brokers: ["125.71.97.132:9094"]
+  user: "kafka-user"
+  passwd: "KLUS5MsuHzedT4f7tG9#Cd%7"
+  topic: "HTY_IOT_DOOR_STATE"
+mqtt:
+  brokers: ["125.71.97.132:1883"]
+  username: "iot"
+  password: "WE5z5CR9XVjq"
+  autoReconnect: true
+  connectRetry: true
+  connectRetryInterval: 5s
+  keepAlive: 30s
+  pingTimeout: 10s
+  cleanSession: false
+  topics:
+    "$share/group1//+/+/firmware/pull/reply": 2
+
+
+
+

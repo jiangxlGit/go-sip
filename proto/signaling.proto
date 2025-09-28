@@ -1,0 +1,109 @@
+syntax = "proto3";
+
+package signaling;
+option go_package = "./signaling"; 
+
+service SipService {
+  // 双向流式通信通道
+  rpc StreamChannel(stream ClientMessage) returns (stream ServerCommand) {}
+
+  rpc IpcEventReq(IpcEventRequest) returns (IpcEventAck);
+
+  rpc IpcInviteReq(IpcInviteRequest) returns (IpcInviteAck);
+
+  rpc AiEventReq(AIEventRequest) returns (AIEventAck);
+
+  rpc OTAUpgradeReq(OTAUpgradeRequest) returns (OTAUpgradeAck);
+}
+
+message ClientMessage {
+  oneof content {
+    ClientRegister register = 1;  // 客户端注册
+    CommandResult result = 2;     // 命令执行结果
+    Heartbeat heartbeat = 3;      // 心跳包
+  }
+}
+
+message ServerCommand {
+  int64 MsgID = 1;              // 命令唯一ID
+  string Method = 2;            // 执行动作
+  bytes payload = 3;            // 附加数据
+}
+
+message ClientRegister {
+  string client_id = 1;         // 客户端唯一标识
+  string version = 2;           // 客户端版本
+  string device_type = 3;      // 设备类型
+}
+
+message CommandResult {
+  int64 MsgID = 1;
+  bool success = 2;
+  bytes payload = 3;            
+}
+
+message Heartbeat {
+  int64 timestamp = 1;
+}
+
+message IpcEventRequest {
+  string client_id = 1;         // 客户端唯一标识
+  string ipc_id = 2;            // IPC 唯一标识
+  string event = 3;             // 事件类型
+  string channel_id = 4;        // 通道ID
+  string ipc_name = 5;          // IPC 名称
+  string manufacturer = 6;      // IPC 厂商
+  string transport = 7;         // 信令传输协议
+  string streamtype = 8;        // 流传输模式
+  string status = 9;            // IPC 状态
+  int64 active_time = 10;       // IPC 活跃时间
+  string ipc_ip = 11;           // IPC IP
+}
+
+message IpcEventAck {
+  bool success = 1;          // 处理结果是否成功
+  string msg = 2;        // 服务端的反馈信息
+}
+
+
+message IpcInviteRequest {
+  string client_id = 1;         
+  string ipc_id = 2;    
+}
+
+message IpcInviteAck {
+  bool success = 1;          
+  string zlm_ip = 2;
+  int64 zlm_port = 3;        
+}
+
+
+message AIEventRequest {
+  int64 event_id = 1;
+  string stream_id = 2;
+  string client_id = 3;
+  string class_name = 4;
+  double max_score = 5;
+  int64 count = 6;
+  string device_id = 7; 
+  string rk_platform = 8;
+}
+
+message AIEventAck {
+  bool success = 1;       
+  string msg = 2;       
+}
+
+message OTAUpgradeRequest {
+  string device_id = 1;
+  string firmware_id = 2;
+  string firmware_version = 3;
+  string upgrade_complete = 4;
+  string upgrade_progress = 5;
+  string upgrade_error = 6;
+}
+
+message OTAUpgradeAck {
+  bool success = 1;       
+  string msg = 2;       
+}

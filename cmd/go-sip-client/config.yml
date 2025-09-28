@@ -1,0 +1,31 @@
+api: 0.0.0.0
+sip_client_port: 7090
+tcp: 125.71.97.132:12345
+udp: 10.42.0.1:5060 # sip服务器udp端口
+gateway: 125.71.97.132:8999
+zlm_inner_ip: 10.42.0.1 #  zlm的内网ip
+zlm_secret: 1OjfEJFBw2eQfC8SCEleo5oyHjI5zBku
+device_type: "rk3576"
+logLevel: info
+database:
+  dialect: sqllite # mysql postgresql sqllite
+stream:
+  hls: 1 # 是否开启视频流转hls
+  rtmp: 1 # 是否开启视频流转rtmp
+gb28181: # gb28181 域，系统id，用户id，通道id，用户数量，初次运行使用配置，之后保存数据库，如果数据库不存在使用配置文件内容
+  lid:    "37070000082008000001" # 系统ID
+  region: 3707000008           # 系统域
+  passwd: "admin123"
+audio:
+  sample_rate: 8000 # 音频采样率
+  channels: 1 # 音频通道数
+  input_device: ""
+  output_device: ""
+openapi:
+  client_id: iot-device-openapi-test
+  secret_key: 5ef3177bec88b6a675ce513d8a927c9ab3acafd3
+aliyunoss:
+  endpoint: https://oss-cn-shenzhen.aliyuncs.com
+  accessKeyId: LTAI5tNEw4QJ8RAGsPAJJDcJ
+  accessKeySecret: zEejWuPfQbrY1WkV7JtcFOSOexoKxr
+  bucketName: go-sip-test

@@ -1,0 +1,25 @@
+api: 0.0.0.0 # wvp服务暴露ip
+port: 9090   # wvp服务暴露端口
+username: admin # 登录用户名
+password: Hty@2025 # 登录密码
+logLevel: info
+database:
+  redis:
+    host: 125.71.97.132:6379
+    password: UJk7*mKE%wNM
+  mysql:
+    host: 125.71.97.132:3306
+    user: iot
+    password: h3!WF3ZxAY6Y
+    dbname: htyiot
+    max_open_conns: 50
+    max_idle_conns: 10
+    conn_max_lifetime: 300
+aliyunoss:
+  endpoint: https://oss-cn-shenzhen.aliyuncs.com
+  accessKeyId: LTAI5tNEw4QJ8RAGsPAJJDcJ
+  accessKeySecret: zEejWuPfQbrY1WkV7JtcFOSOexoKxr
+  bucketName: go-sip-test
+
+
+
