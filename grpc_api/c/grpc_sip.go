@@ -282,17 +282,18 @@ func (c *SipClient) executeCommand(cmd *pb.ServerCommand) *CommandResult {
 			}
 			ssrc = fmt.Sprintf("1%s%s", stream_arr[0][len(stream_arr[0])-4:], d.DeviceID[len(d.DeviceID)-3:])
 		} else {
-			ssrc = fmt.Sprintf("%s%s", stream_arr[0][:5], d.DeviceID[len(d.DeviceID)-3:])
 			var destZlmHost string
 			var destZlmSecret string
 			var destZlmIp string
 			// 标清流
 			if stream_arr[1] == "0" {
+				ssrc = fmt.Sprintf("1%s%s", stream_arr[0][:4], d.DeviceID[len(d.DeviceID)-3:])
 				resolution = 0
 				destZlmHost = sipapi.Local_ZLM_Host
 				destZlmSecret = m.CMConfig.ZlmSecret
 				destZlmIp = m.CMConfig.ZlmInnerIp
 			} else if stream_arr[1] == "1" {
+				ssrc = fmt.Sprintf("2%s%s", stream_arr[0][:4], d.DeviceID[len(d.DeviceID)-3:])
 				resolution = 1
 				destZlmHost = d.ZlmDomain
 				destZlmSecret = d.ZlmSecret
@@ -372,9 +373,6 @@ func (c *SipClient) executeCommand(cmd *pb.ServerCommand) *CommandResult {
 				req.DstUrl = d.ZLMIP
 				req.DstPort = strconv.Itoa(d.ZLMPort)
 				req.Ssrc = ssrc
-				if stream_arr[1] == "1" {
-					req.Ssrc = "2"
-				}
 				if d.Mode == 1 {
 					req.IsUdp = "0"
 				} else {
@@ -399,6 +397,22 @@ func (c *SipClient) executeCommand(cmd *pb.ServerCommand) *CommandResult {
 			rsp.Msg = []byte(fmt.Sprintf("执行失败: %v", err))
 			return rsp
 		}
+		stream_arr := strings.Split(d.StreamID, "_")
+		if len(stream_arr) <= 1 {
+			rsp.Success = false
+			rsp.Msg = []byte(fmt.Sprintf("执行失败: %v", err))
+			return rsp
+		}
+		var ssrc string
+		if strings.HasPrefix(d.StreamID, "IPC") {
+			ssrc = fmt.Sprintf("1%s%s", d.StreamID[len(d.StreamID)-4:], d.DeviceID[len(d.DeviceID)-3:])
+		} else {
+			if stream_arr[1] == "0" {
+				ssrc = fmt.Sprintf("1%s%s", stream_arr[0][:4], d.DeviceID[len(d.DeviceID)-3:])
+			} else if stream_arr[1] == "1" {
+				ssrc = fmt.Sprintf("2%s%s", stream_arr[0][:4], d.DeviceID[len(d.DeviceID)-3:])
+			}
+		}
 
 		// 判断流是否存在zlm
 		var zlmGetMediaListReq = zlm_api.ZlmGetMediaListReq{}
@@ -419,11 +433,7 @@ func (c *SipClient) executeCommand(cmd *pb.ServerCommand) *CommandResult {
 			}
 			req.StreamID = d.StreamID
 			req.Vhost = "__defaultVhost__"
-			stream_arr := strings.Split(d.StreamID, "_")
-			req.Ssrc = "1"
-			if stream_arr[1] == "1" {
-				req.Ssrc = "2"
-			}
+			req.Ssrc = ssrc
 			_resp := zlm_api.ZlmStopSendRtp(sipapi.Local_ZLM_Host, m.CMConfig.ZlmSecret, req)
 			if _resp.Code == 0 {
 				rsp.Success = true

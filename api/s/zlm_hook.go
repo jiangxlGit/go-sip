@@ -173,19 +173,19 @@ func zlmStreamChanged(c *gin.Context) {
 		m.ZlmWebHookResponse(c, -1, "body error")
 		return
 	}
+	paramsMap := make(map[string]string)
+	paramsArray := strings.Split(req.Params, "&")
+	for _, params := range paramsArray {
+		param := strings.Split(params, "=")
+		if len(param) != 2 {
+			m.ZlmWebHookResponse(c, 401, "Unauthorized")
+			return
+		}
+		paramsMap[param[0]] = param[1]
+	}
 	if req.Regist {
 		Logger.Info("流注册 ", zap.Any("req", req))
 		if req.APP == "audio" && req.Schema == "rtsp" {
-			paramsMap := make(map[string]string)
-			paramsArray := strings.Split(req.Params, "&")
-			for _, params := range paramsArray {
-				param := strings.Split(params, "=")
-				if len(param) != 2 {
-					m.ZlmWebHookResponse(c, 401, "Unauthorized")
-					return
-				}
-				paramsMap[param[0]] = param[1]
-			}
 			if device_id, ok := paramsMap["device_id"]; ok {
 				if zlm_node, ok := ZLM_Node[device_id]; ok {
 					sip_req := &grpc_api.Sip_Audio_Play_Req{
@@ -227,7 +227,6 @@ func zlmStreamChanged(c *gin.Context) {
 				st <- struct{}{}
 			}
 		}
-
 	} else {
 		Logger.Info("流注销 :", zap.Any("req", req))
 		if req.APP == "rtp" && req.Schema == "rtsp" {
@@ -247,35 +246,39 @@ func zlmStreamChanged(c *gin.Context) {
 				return
 			}
 
-			sip_server := grpc_server.GetSipServer()
-			sip_req := &grpc_api.Sip_Stop_Play_Req{
-				App:         req.APP,
-				StreamID:    req.Stream,
-				ZlmIP:       zlmInfo.ZlmIp,
-				ZlmDomain:   zlmInfo.ZlmDomain,
-				ZlmHttpPort: zlmInfo.ZlmPort,
-				ZlmSecret:   zlmInfo.ZlmSecret,
-			}
-			d, err := json.Marshal(sip_req)
-			if err != nil {
-				m.ZlmWebHookResponse(c, -1, "参数格式错误，json序列化失败")
-			}
-			device_id, err := redis_util.HGet_2(fmt.Sprintf(redis.SIP_IPC, m.SMConfig.SipID), s_size[0])
-			if err != nil || device_id == "" {
-				m.ZlmWebHookResponse(c, -1, "ipc_id未注册，请检查摄像头是否正常")
-				return
-			}
-			_, err = sip_server.ExecuteCommand(device_id, &pb.ServerCommand{
-				MsgID:   m.MsgID_StopPlay,
-				Method:  m.StopPlay,
-				Payload: d,
-			})
-			if err != nil {
-				m.ZlmWebHookResponse(c, -1, "终端请求错误，请检查是否掉线")
+			if device_id, ok := paramsMap["device_id"]; ok {
+				sip_server := grpc_server.GetSipServer()
+				sip_req := &grpc_api.Sip_Stop_Play_Req{
+					App:         req.APP,
+					DeviceID:    device_id,
+					StreamID:    req.Stream,
+					ZlmIP:       zlmInfo.ZlmIp,
+					ZlmDomain:   zlmInfo.ZlmDomain,
+					ZlmHttpPort: zlmInfo.ZlmPort,
+					ZlmSecret:   zlmInfo.ZlmSecret,
+				}
+				d, err := json.Marshal(sip_req)
+				if err != nil {
+					m.ZlmWebHookResponse(c, -1, "参数格式错误，json序列化失败")
+					return
+				}
+				device_id, err := redis_util.HGet_2(fmt.Sprintf(redis.SIP_IPC, m.SMConfig.SipID), s_size[0])
+				if err != nil || device_id == "" {
+					m.ZlmWebHookResponse(c, -1, "ipc_id未注册，请检查摄像头是否正常")
+					return
+				}
+				_, err = sip_server.ExecuteCommand(device_id, &pb.ServerCommand{
+					MsgID:   m.MsgID_StopPlay,
+					Method:  m.StopPlay,
+					Payload: d,
+				})
+				if err != nil {
+					m.ZlmWebHookResponse(c, -1, "终端请求错误，请检查是否掉线")
+					return
+				}
 			}
 
 		}
-
 		if req.APP == "audio" && req.Schema == "rtsp" {
 			delete(audio_pull_map, req.Stream)
 			delete(ZLM_Node, req.Stream)

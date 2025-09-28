@@ -208,37 +208,40 @@ func zlmStreamNotFound(c *gin.Context) {
 	stream_arr := strings.Split(req.Stream, "_")
 	// 判断req.Stream是否以IPC开头，不以IPC开头则表示为国标设备
 	if !strings.HasPrefix(stream_arr[0], "IPC") {
+		// 本地zlm只推送标清流，高清流点播时再直接推流到远程zlm
 		sd_stream_id := stream_arr[0] + "_0"
 		rtp_info := zlm_api.ZlmStartRtpServer(sipapi.Local_ZLM_Host, m.CMConfig.ZlmSecret, sd_stream_id, "rtp", 0)
 		if rtp_info.Code != 0 || rtp_info.Port == 0 {
 			Logger.Error("open rtp server fail", zap.Int("code", rtp_info.Code))
 			return
 		}
+		// 本地zlm推流时设置的ssrcc 为1+流ID后5位
+		ssrc := fmt.Sprintf("1%s", stream_arr[0][len(stream_arr[0])-5:])
 		// 向摄像头发送信令请求推实时标清流到zlm
 		pm := &sipapi.Streams{ChannelID: stream_arr[0], StreamID: sd_stream_id,
 			ZlmIP: m.CMConfig.ZlmInnerIp, ZlmPort: rtp_info.Port, T: 0, Resolution: 1,
-			Mode: 0, Ttag: db.M{}, Ftag: db.M{}, OnlyAudio: false, Ssrc: fmt.Sprintf("%s0", stream_arr[0][len(stream_arr[0])-5:])}
+			Mode: 1, Ttag: db.M{}, Ftag: db.M{}, OnlyAudio: false, Ssrc: ssrc}
 		_, err = sipapi.SipPlay(pm)
 		if err != nil {
-			Logger.Error("向摄像头发送信令请求实时标清流推流到zlm失败", zap.Any("ipcId", stream_arr[0]), zap.Error(err))
+			Logger.Error("向摄像头发送信令推送标清流到本地zlm失败", zap.Any("ipcId", stream_arr[0]), zap.Error(err))
 			return
 		}
 
-		hd_stream_id := stream_arr[0] + "_1"
-		rtp_info2 := zlm_api.ZlmStartRtpServer(sipapi.Local_ZLM_Host, m.CMConfig.ZlmSecret, hd_stream_id, "rtp", 0)
-		if rtp_info2.Code != 0 || rtp_info2.Port == 0 {
-			Logger.Error("open rtp server fail", zap.Int("code", rtp_info2.Code))
-			return
-		}
-		// 向摄像头发送信令请求推实时高清清流到zlm
-		pm2 := &sipapi.Streams{ChannelID: stream_arr[0], StreamID: hd_stream_id,
-			ZlmIP: m.CMConfig.ZlmInnerIp, ZlmPort: rtp_info.Port, T: 0, Resolution: 1,
-			Mode: 0, Ttag: db.M{}, Ftag: db.M{}, OnlyAudio: false, Ssrc: fmt.Sprintf("%s1", stream_arr[0][len(stream_arr[0])-5:])}
-		_, err = sipapi.SipPlay(pm2)
-		if err != nil {
-			Logger.Error("向摄像头发送信令请求实时高清流推流到zlm失败", zap.Any("ipcId", stream_arr[0]), zap.Error(err))
-			return
-		}
+		// hd_stream_id := stream_arr[0] + "_1"
+		// rtp_info2 := zlm_api.ZlmStartRtpServer(sipapi.Local_ZLM_Host, m.CMConfig.ZlmSecret, hd_stream_id, "rtp", 0)
+		// if rtp_info2.Code != 0 || rtp_info2.Port == 0 {
+		// 	Logger.Error("open rtp server fail", zap.Int("code", rtp_info2.Code))
+		// 	return
+		// }
+		// // 向摄像头发送信令请求推实时高清清流到zlm
+		// pm2 := &sipapi.Streams{ChannelID: stream_arr[0], StreamID: hd_stream_id,
+		// 	ZlmIP: m.CMConfig.ZlmInnerIp, ZlmPort: rtp_info.Port, T: 0, Resolution: 1,
+		// 	Mode: 0, Ttag: db.M{}, Ftag: db.M{}, OnlyAudio: false, Ssrc: fmt.Sprintf("%s1", stream_arr[0][len(stream_arr[0])-5:])}
+		// _, err = sipapi.SipPlay(pm2)
+		// if err != nil {
+		// 	Logger.Error("向摄像头发送信令请求实时高清流推流到zlm失败", zap.Any("ipcId", stream_arr[0]), zap.Error(err))
+		// 	return
+		// }
 	}
 
 	c.JSON(http.StatusOK, map[string]any{

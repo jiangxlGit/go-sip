@@ -25,6 +25,7 @@ type Sip_Play_Back_Req struct {
 
 type Sip_Stop_Play_Req struct {
 	App         string
+	DeviceID    string
 	StreamID    string
 	ZlmIP       string
 	ZlmDomain   string // ZLM 域名
